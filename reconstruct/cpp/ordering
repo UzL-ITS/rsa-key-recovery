@@ -1,0 +1,49 @@
+Expanding
+---------
+Expanding starts at least significant bits
+
+
+openssl representation
+----------------------
+Lists most significant byte on the left of the hex string
+
+How is it ordered in the PEM file ? How are the parameters separated in DER / ASN1 ?
+Can we leak length information?
+
+
+example.json (used by python impl.)
+------------
+
+Array.start: Least significant bits / symbol
+Array.end: Most significant bits / symbol
+
+example_reverse.json (used by cpp impl.)
+--------------------
+
+Array.start: Most significant bits / symbol
+Array.end: Least significant bits / symbol
+
+Both examples are constructed by feeding the parameters as base 10 integers into constr_encoding.
+Meaning, they are divisible by 6 and do not suffer from any byte to b64 representation issues (like == at the end).
+Or in other words. For the most significant b64 symbol it is just necessary to fill up to the next multiplicant of 6 with
+0s. E.g. if len(p) = 512 --> 2 bits remaining at the end, these are a special case and they are treated as 0000xx
+
+def constr_encoding(x, lines):
+    """ Constructs the cacheline-encoding of x. The least significant block is first.
+
+    First, add 0 to the beginning so that the length is divisible by 6.
+    Then, check for each 6-Bit block whether it is in line1 (encoded by 0) or in line2 (encoded by 1).
+    At the end, reverse the ordering, so that the least significant block is first.
+    """
+    s = bin(x)[2:]
+    while len(s) % 6 != 0:
+        s = "0" + s
+    l = int(len(s) / 6)
+    code = []
+    for i in range(0, l):
+        y = int(s[i * 6:(i + 1) * 6], 2)
+        for j in range(0, len(lines)):
+            if y in lines[j]:
+                code.append(j)
+    code.reverse()
+    return code
