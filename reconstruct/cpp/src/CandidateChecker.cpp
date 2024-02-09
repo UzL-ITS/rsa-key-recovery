@@ -10,6 +10,6 @@ CandidateChecker::~CandidateChecker() {
 
 }
 
-bool CandidateChecker::checkCandidate(Candidate &c, CacheLineObservation &o) {
+bool CandidateChecker::checkCandidate(Candidate &c, Observation &o) {
   return c.check(o);
 }

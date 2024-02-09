@@ -2,8 +2,6 @@
 // Created by florian on 15.09.20.
 //
 
-#include "Constants.h"
-#include "Candidate.h"
 #include "BinaryHelper.h"
 
 void BinaryHelper::least_significant_bits(mpz_t lsb, mpz_t parameter,

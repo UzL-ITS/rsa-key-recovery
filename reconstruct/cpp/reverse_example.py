@@ -6,7 +6,7 @@ def main(args):
         example = json.load(f)
 
     example['enc_p'] = list(reversed(example['enc_p']))
-    example['enc_q'] =list(reversed(example['enc_q']))
+    example['enc_q'] = list(reversed(example['enc_q']))
     example['enc_d'] = list(reversed(example['enc_d']))
     example['enc_dp'] = list(reversed(example['enc_dp']))
     example['enc_dq'] = list(reversed(example['enc_dq']))

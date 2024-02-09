@@ -25,8 +25,8 @@ public:
   virtual size_t getMaxDepth() = 0;
 
   virtual size_t getShortestParamLength() = 0;
-  virtual ParameterName getShortestParam() = 0;
-  virtual size_t getExpandLengthForShortestParam() = 0;
+  virtual ParameterName getShortestExpandParamName() = 0;
+  virtual size_t getShortestParamExpandLength() = 0;
 
   virtual void getTerminalValue(mpz_t val, mpz_t parameter, unsigned int depth) = 0;
 };

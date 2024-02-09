@@ -17,6 +17,8 @@ public:
   static std::string validationFileName;
   static std::string terminationFileName;
 
+  static const int observationPartitions;
+
   static int finalDepth;
 
   static bool transmitToChainedSolver;

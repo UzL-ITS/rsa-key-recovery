@@ -10,6 +10,9 @@ class Constants {
 public:
 
   static const unsigned int BITS_PER_B64_SYMBOL = 6;
+  static const unsigned int INVALID_OBSERVATION = 0xFF;
+
+  static const unsigned int GAMMA = 1;
 
 };
 

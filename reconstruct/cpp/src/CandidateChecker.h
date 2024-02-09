@@ -7,7 +7,7 @@
 
 
 #include "Candidate.h"
-#include "CacheLineObservation.h"
+#include "Observation.h"
 
 class CandidateChecker {
 public:
@@ -15,7 +15,7 @@ public:
 
   virtual ~CandidateChecker();
 
-  static bool checkCandidate(Candidate &c, CacheLineObservation &o);
+  static bool checkCandidate(Candidate &c, Observation &o);
 };
 
 

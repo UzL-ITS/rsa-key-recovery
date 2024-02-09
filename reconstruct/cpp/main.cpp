@@ -9,9 +9,10 @@
 
 #include "src/Candidate.h"
 #include "src/CandidateGenerator.h"
-#include "src/CacheLineObservation.h"
+#include "src/Observation.h"
 #include "src/CandidateChecker.h"
 #include "src/Config.h"
+#include "src/Constants.h"
 #include "src/CandidateTransmitter.h"
 
 std::mutex finalCandidatesMutex;
@@ -38,7 +39,7 @@ void dumpJson(std::string filename, std::vector<std::shared_ptr<Candidate>> cand
 
 void processCandidatesBreadthFirst(std::vector<std::shared_ptr<Candidate>> candidates,
                                    std::vector<std::shared_ptr<Candidate>> &finalCandidates,
-                                   unsigned int depth, CacheLineObservation &o) {
+                                   unsigned int depth, Observation &o) {
   CandidateGenerator candidateGenerator;
   std::vector<std::shared_ptr<Candidate>> candidatesNextRound;
 
@@ -74,7 +75,7 @@ void processCandidatesBreadthFirst(std::vector<std::shared_ptr<Candidate>> candi
 
 void processCandidatesDepthFirst(std::vector<std::shared_ptr<Candidate>> candidates,
                                  std::vector<std::shared_ptr<Candidate>> &finalCandidates,
-                                 CacheLineObservation &o) {
+                                 Observation &o) {
 
   CandidateGenerator candidateGenerator;
   std::vector<std::shared_ptr<Candidate>> localFinalCandidates;
@@ -89,12 +90,12 @@ void processCandidatesDepthFirst(std::vector<std::shared_ptr<Candidate>> candida
       candidates.pop_back();
 
       if (Config::finalDepth == -1) {
-        depth = next->getTerminationHandler()->getExpandLengthForShortestParam();
+        depth = next->getTerminationHandler()->getShortestParamExpandLength();
       } else {
         depth = Config::finalDepth;
       }
 
-      if (next->getDepth() <= depth) {
+      if (next->getDepth() < depth) {
         std::vector<std::shared_ptr<Candidate>> newCandidates =
             candidateGenerator.expandCandidate(*next, o);
         for (std::vector<std::shared_ptr<Candidate>>::iterator c = newCandidates.begin();
@@ -137,7 +138,7 @@ void moveCandidates(std::vector<std::shared_ptr<Candidate>> &to,
 
 void scheduleTask(std::vector<std::shared_ptr<Candidate>> &intermediateCandidates,
                   std::future<void> *futures, int i,
-                  CacheLineObservation &o,
+                  Observation &o,
                   std::vector<std::shared_ptr<Candidate>> &finalCandidates) {
 
   std::vector<std::shared_ptr<Candidate>> threadCandidates;
@@ -163,6 +164,8 @@ void printConfig() {
             << "\tTransmit to chained solver: " << Config::transmitToChainedSolver << std::endl
             << "\tDestination Host: " << Config::destinationHost << std::endl
             << "\tDestination Port: " << Config::destinationPort << std::endl << std::endl;
+  std::cout << "Constants: " << std::endl
+            << "\tGAMMA: " << Constants::GAMMA << std::endl << std::endl;
 }
 
 void tryTransmit(bool done,
@@ -197,7 +200,7 @@ int main() {
 
   std::unique_lock<std::mutex> lk(finalCandidatesMutex, std::defer_lock);
 
-  CacheLineObservation o;
+  Observation o;
   CandidateGenerator candidateGenerator;
 
   std::shared_ptr<CandidateTransmitter> transmitter = nullptr;
@@ -208,6 +211,8 @@ int main() {
 
   std::vector<std::shared_ptr<Candidate>> startCandidates =
       candidateGenerator.generateStartCandidates(o);
+
+  std::cout << "Number of start candidates: " << startCandidates.size() << std::endl;
 
   for (auto candidate = startCandidates.begin(); candidate != startCandidates.end(); candidate++) {
     std::shared_ptr<ParameterTerminationHandler> parameterTerminationHandler =
@@ -221,17 +226,18 @@ int main() {
   processCandidatesBreadthFirst(startCandidates, intermediateCandidates, Config::intermediateDepth,
                                 o);
 
-  std::cout << "Number of intermediate Candidates: " << intermediateCandidates.size() << std::endl;
+  std::cout << "Number of intermediate candidates: " << intermediateCandidates.size() << std::endl;
 
   std::future<void> futures[Config::numberOfThreads];
-
-  for (int i = 0; i < Config::numberOfThreads; i++) {
+  unsigned int started_threads = 0;
+  for (int i = 0; i < Config::numberOfThreads && intermediateCandidates.size() > 0; i++) {
     scheduleTask(intermediateCandidates, futures, i, o, finalCandidates);
+    started_threads++;
   }
 
   while (true) {
 
-    for (int i = 0; i < Config::numberOfThreads; i++) {
+    for (int i = 0; i < started_threads; i++) {
       if (futures[i].wait_for(std::chrono::milliseconds(100)) == std::future_status::ready
           && intermediateCandidates.size() > 0) {
         scheduleTask(intermediateCandidates, futures, i, o, finalCandidates);
@@ -239,7 +245,7 @@ int main() {
     }
 
     if (intermediateCandidates.size() == 0) {
-      for (int i = 0; i < Config::numberOfThreads; i++) {
+      for (int i = 0; i < started_threads; i++) {
         while (futures[i].wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) {
           if (transmitter != nullptr) {
             tryTransmit(done, statusCounter, lk, transmitter, finalCandidates);

@@ -31,8 +31,8 @@ public:
   size_t getMaxDepth() override;
 
   size_t getShortestParamLength() override;
-  size_t getExpandLengthForShortestParam() override;
-  ParameterName getShortestParam() override;
+  size_t getShortestParamExpandLength() override;
+  ParameterName getShortestExpandParamName() override;
 
   void getTerminalValue(mpz_t val, mpz_t parameter, unsigned int depth) override;
 

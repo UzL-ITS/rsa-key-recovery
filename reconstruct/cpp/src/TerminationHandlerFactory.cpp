@@ -23,27 +23,29 @@ size_t TerminationHandlerFactory::lengthOfP;
 std::shared_ptr<ParameterTerminationHandler>
 TerminationHandlerFactory::getParameterTerminationHandler(Candidate &c) {
 
-  if(!initialized) {
+  if (!initialized) {
     loadParameters(Config::terminationFileName);
   }
 
-  size_t expandLengthForShortestParam = std::min({lengthOfP, lengthOfQ, lengthOfD - c.getTauK(),
-                                            lengthOfDp - c.getTauKp(), lengthOfDq - c.getTauKq()});
+  size_t shortestParamExpandLength = std::min(
+      {lengthOfP - c.getTauGamma(), lengthOfQ - c.getTauGamma(), lengthOfD - c.getTauK(),
+       lengthOfDp - c.getTauKp() - c.getTauGamma(),
+       lengthOfDq - c.getTauKq() - c.getTauGamma()});
   size_t shortestParam = std::min({lengthOfP, lengthOfQ, lengthOfD,
-                             lengthOfDp, lengthOfDq});
+                                  lengthOfDp, lengthOfDq});
 
-  ParameterTerminationHandler::ParameterName shortestParamName;
+  ParameterTerminationHandler::ParameterName shortestExpandParamName;
 
-  if (shortestParam == lengthOfP) {
-    shortestParamName = ParameterTerminationHandler::ParameterName::P;
-  } else if (shortestParam == lengthOfQ) {
-    shortestParamName = ParameterTerminationHandler::ParameterName::Q;
-  } else if (shortestParam == (lengthOfD)) {
-    shortestParamName = ParameterTerminationHandler::ParameterName::D;
-  } else if (shortestParam == (lengthOfDp)) {
-    shortestParamName = ParameterTerminationHandler::ParameterName::Dp;
-  } else if (shortestParam == (lengthOfDq)) {
-    shortestParamName = ParameterTerminationHandler::ParameterName::Dq;
+  if (shortestParamExpandLength == lengthOfP - c.getTauGamma()) {
+    shortestExpandParamName = ParameterTerminationHandler::ParameterName::P;
+  } else if (shortestParamExpandLength == lengthOfQ - c.getTauGamma()) {
+    shortestExpandParamName = ParameterTerminationHandler::ParameterName::Q;
+  } else if (shortestParamExpandLength == (lengthOfD) - c.getTauK()) {
+    shortestExpandParamName = ParameterTerminationHandler::ParameterName::D;
+  } else if (shortestParamExpandLength == (lengthOfDp)  - c.getTauKp() - c.getTauGamma()) {
+    shortestExpandParamName = ParameterTerminationHandler::ParameterName::Dp;
+  } else if (shortestParamExpandLength == (lengthOfDq) - c.getTauKq() - c.getTauGamma()) {
+    shortestExpandParamName = ParameterTerminationHandler::ParameterName::Dq;
   }
 
   size_t maxParamLength = ((shortestParam / Constants::BITS_PER_B64_SYMBOL) + 1) * 6;
@@ -51,7 +53,8 @@ TerminationHandlerFactory::getParameterTerminationHandler(Candidate &c) {
 
   std::shared_ptr<ParameterTerminationHandler> handler = std::shared_ptr<SimpleExampleTerminationHandler>(
       new SimpleExampleTerminationHandler(lengthOfP, lengthOfQ, lengthOfD, lengthOfDp, lengthOfDq,
-          shortestParam, shortestParamName, maxParamLength, expandLengthForShortestParam));
+                                          shortestParam, shortestExpandParamName, maxParamLength,
+                                          shortestParamExpandLength));
 
   return handler;
 }
@@ -68,4 +71,6 @@ void TerminationHandlerFactory::loadParameters(std::string file_name) {
   lengthOfD = root["length_d"].asUInt();
   lengthOfDp = root["length_dp"].asUInt();
   lengthOfDq = root["length_dq"].asUInt();
+
+  initialized = true;
 }

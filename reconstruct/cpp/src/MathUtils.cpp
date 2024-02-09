@@ -2,7 +2,6 @@
 // Created by florian on 15.09.20.
 //
 
-#include "BinaryHelper.h"
 #include "MathUtils.h"
 
 void MathUtils::modularInverse(mpz_t inverse, mpz_t number, mpz_t modulus) {

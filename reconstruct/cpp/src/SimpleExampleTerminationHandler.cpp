@@ -58,7 +58,7 @@ size_t SimpleExampleTerminationHandler::getLengthOfDq() {
   return lengthOfDq;
 }
 
-ParameterTerminationHandler::ParameterName SimpleExampleTerminationHandler::getShortestParam() {
+ParameterTerminationHandler::ParameterName SimpleExampleTerminationHandler::getShortestExpandParamName() {
   return shortestParam;
 }
 
@@ -70,7 +70,7 @@ size_t SimpleExampleTerminationHandler::getMaxDepth() {
   return maxDepth;
 }
 
-size_t SimpleExampleTerminationHandler::getExpandLengthForShortestParam() {
+size_t SimpleExampleTerminationHandler::getShortestParamExpandLength() {
     return expandLengthForShortestParam;
 }
 

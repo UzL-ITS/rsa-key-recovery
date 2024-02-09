@@ -16,7 +16,6 @@ add_subdirectory(jsoncpp)
 add_executable(reconstruct
         main.cpp
         src/Candidate.cpp src/Candidate.h
-        src/CacheLineObservation.cpp src/CacheLineObservation.h
         src/CandidateGenerator.cpp src/CandidateGenerator.h
         src/CandidateChecker.cpp src/CandidateChecker.h
         src/Constants.h
@@ -26,8 +25,9 @@ add_executable(reconstruct
         src/SimpleExampleTerminationHandler.cpp src/SimpleExampleTerminationHandler.h
         src/TerminationHandlerFactory.cpp src/TerminationHandlerFactory.h
         src/ValidationValues.cpp src/ValidationValues.h
+        src/LengthValues.cpp src/LengthValues.h
         src/ValidationValuesFactory.cpp src/ValidationValuesFactory.h
-        src/Config.cpp src/Config.h src/CandidateTransmitter.cpp src/CandidateTransmitter.h)
+        src/Config.cpp src/Config.h src/CandidateTransmitter.cpp src/CandidateTransmitter.h src/Observation.cpp src/Observation.h)
 
 target_link_libraries(reconstruct jsoncpp_lib Boost::boost gmp ${CMAKE_THREAD_LIBS_INIT})
 

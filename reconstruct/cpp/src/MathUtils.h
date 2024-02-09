@@ -6,11 +6,7 @@
 #define RECONSTRUCT_MATHUTILS_H
 
 
-#include <vector>
-#include <cstdint>
 #include <boost/multiprecision/gmp.hpp>
-#include <json/value.h>
-#include "CacheLineObservation.h"
 
 class MathUtils {
 

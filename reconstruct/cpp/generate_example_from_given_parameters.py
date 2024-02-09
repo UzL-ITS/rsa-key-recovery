@@ -1,9 +1,10 @@
 import json
 import argparse
 import math
-from Crypto.Util import number
+from Crypto.PublicKey import RSA
 import random
 
+#
 cache_lines_38_26 = [
     [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
     [26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51]
@@ -29,10 +30,12 @@ memjam_8_byte_partitions = [
     [49, 50, 51] # 0x78
 ]
 
+
 error_probability = 0.2
 INVALID_OBSERVATION = 0xFF
 
-def getModInverse(a, m):
+
+def get_mod_inverse(a, m):
     """ Computes the modular inverse of a mod m using the Euclidean algorithm."""
     if math.gcd(a, m) != 1:
         return None
@@ -55,9 +58,9 @@ def constr_encoding(x, partitions, simulate_missing):
     s = bin(x)[2:]
     while len(s) % 6 != 0:
         s = "0" + s
-    l = int(len(s) / 6)
+    param_length = int(len(s) / 6)
     code = []
-    for i in range(0, l):
+    for i in range(0, param_length):
         y = int(s[i * 6:(i + 1) * 6], 2)
         for j in range(0, len(partitions)):
             if y in partitions[j]:
@@ -70,48 +73,34 @@ def constr_encoding(x, partitions, simulate_missing):
     return code
 
 
-def generate_rsa_params(bit_length):
-    prime_length = int(bit_length / 2)
-    max_prime_val = 2**(prime_length) - 1
+def read_rsa_params(in_file):
 
-    e = 65537
+    with open(in_file, 'r') as key_file:
+        key_string = key_file.read()
 
-    while True:
-        while True:
-            p = number.getPrime(prime_length)
-            if p % e != 1 and p < max_prime_val:
-                break
+    rsa_key = RSA.importKey(key_string)
+    dp = get_mod_inverse(rsa_key.e, rsa_key.p - 1)
+    dq = get_mod_inverse(rsa_key.e, rsa_key.q - 1)
 
-        while True:
-            q = number.getPrime(prime_length)
-            if q % e != 1 and q < max_prime_val:
-                break
+    return {'n': rsa_key.n, 'e': rsa_key.e, 'p': rsa_key.p, 'q': rsa_key.q, 'd': rsa_key.d, 'dp': dp, 'dq': dq}
 
-        n = p * q
-        if len(bin(n)[2:]) == bit_length:
-            break
-
-    phi = (p - 1) * (q - 1)
-    d = getModInverse(e, phi)
-    dp = getModInverse(e, p - 1)
-    dq = getModInverse(e, q - 1)
-
-    return {'n': n, 'e': e, 'p': p, 'q': q, 'd': d, 'dp': dp, 'dq': dq}
 
 def test(params):
     m = 37
     c = pow(m, params['e'], params['n'])
     m_d = pow(c, params['d'], params['n'])
+    print("m_d: " + str(m_d))
 
     return m == m_d
+
 
 def main(args):
     partitions = memjam_8_byte_partitions
     simulate_missing = False
     if args.simulate_missing:
         simulate_missing = True
-    bit_length = args.length
-    params = generate_rsa_params(bit_length)
+    in_file = args.infile
+    params = read_rsa_params(in_file)
 
     enc_params = {}
     params_length = {}
@@ -138,17 +127,17 @@ def main(args):
     if args.out:
         out = args.out
     else:
-        out = 'example_' + str(bit_length) + '.json'
+        out = 'openssl_old_construction_' + str(in_file) + '.json'
 
     with open(out, 'w') as f:
         json.dump(params, f)
 
 
 if __name__ == '__main__':
-    default_length = 128
+    default_in = 'test_key_4096bit.pem'
     arg_parser = argparse.ArgumentParser(description='Construct RSA Parameters')
-    arg_parser.add_argument('--length', nargs='?', const=default_length,
-                            default=default_length, type=int)
+    arg_parser.add_argument('--infile', nargs='?', const=default_in,
+                            default=default_in, type=str)
     arg_parser.add_argument('--out', nargs='?', type=str)
     arg_parser.add_argument('--simulate_missing', action='store_true')
     args = arg_parser.parse_args()
