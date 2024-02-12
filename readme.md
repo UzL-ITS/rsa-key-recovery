@@ -1,5 +1,6 @@
 # Key Reconstruction
-This repository contains the key recovery part of the paper "Util::Lookup: Exploiting key decoding in cryptographic libraries" by Florian Sieck, Sebastian Berndt, Jan Wichelmann, and Thomas Eisenbarth (CCS 2021). 
+This repository contains the key recovery parts of the papers "Util::Lookup: Exploiting key decoding in cryptographic libraries" by Florian Sieck, Sebastian Berndt, Jan Wichelmann, and Thomas Eisenbarth (CCS 2021) and of "TeeJam: Sub-Cache-Line Leakages Strike Back" by Florian Sieck, Zhiyuan Zhang, Sebastian Berndt, Chitchanok Chuengsatiansup, Thomas Eisenbarth, and Yuval Yarom (TCHES 2024).
+
 It consists of three parts
 * `simulator` contains a script to generate synthetic traces from a given pem file
 * `reconstruct/cpp` contains the branch-and-prune algorithm to reconstruct all possible candidates up to a desired depth
